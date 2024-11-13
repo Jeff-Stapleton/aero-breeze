@@ -1,13 +1,13 @@
+import { useNavigation } from 'expo-router';
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 
-export interface LoadSheetLoginPageProps {
-  authenticationCallback: () => void;
-}
 
-export function FuelLoadSheetLoginPage(props: LoadSheetLoginPageProps) {
+export function FuelLoadSheetLoginPage() {
+  const navigation = useNavigation();
+
   const handleLogin = async () => {
-    props.authenticationCallback();
+    navigation.navigate('Search');
   };
 
   return (

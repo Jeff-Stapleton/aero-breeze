@@ -1,99 +1,47 @@
 import "./global.css";
-import {BottomSheetModalProvider} from "@gorhom/bottom-sheet";
-import {type Theme, ThemeProvider} from "@react-navigation/native";
-import {SplashScreen, Stack} from "expo-router";
+import {NavigationContainer, type Theme, ThemeProvider} from "@react-navigation/native";
+import {SplashScreen} from "expo-router";
 import {StatusBar} from "expo-status-bar";
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from "react";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
-import {PortalHost} from "@/components/primitives/portal";
-import {DatabaseProvider} from "@/db/provider";
-import {setAndroidNavigationBar} from "@/lib/android-navigation-bar";
 import {NAV_THEME} from "@/lib/constants";
-import {useColorScheme} from "@/lib/useColorScheme";
-import {getItem, setItem} from "@/lib/storage";
-import {Platform} from "react-native";
+import FuelLoadSheetLoginPage from "./pages/login";
+import FlightsTable from "./pages/search";
 
-const LIGHT_THEME: Theme = {
+const LIGHT_MODE: Theme = {
   dark: false,
   colors: NAV_THEME.light,
 };
-const DARK_THEME: Theme = {
+const DARK_MODE: Theme = {
   dark: true,
   colors: NAV_THEME.dark,
 };
+const Stack = createNativeStackNavigator();
+SplashScreen.preventAutoHideAsync();
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from "expo-router";
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: "loadsheet",
 };
 
-// Prevent the splash screen from auto-hiding before getting the color scheme.
-SplashScreen.preventAutoHideAsync();
-
 export default function RootLayout() {
-  const {colorScheme, setColorScheme, isDarkColorScheme} = useColorScheme();
-  const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
-
-  React.useEffect(() => {
-    (async () => {
-      const theme = getItem("theme");
-      if (Platform.OS === "web") {
-        // Adds the background color to the html element to prevent white background on overscroll.
-        document.documentElement.classList.add("bg-background");
-      }
-      if (!theme) {
-        setAndroidNavigationBar(colorScheme);
-        setItem("theme", colorScheme);
-        setIsColorSchemeLoaded(true);
-        return;
-      }
-      const colorTheme = theme === "dark" ? "dark" : "light";
-      setAndroidNavigationBar(colorTheme);
-      if (colorTheme !== colorScheme) {
-        setColorScheme(colorTheme);
-
-        setIsColorSchemeLoaded(true);
-        return;
-      }
-      setIsColorSchemeLoaded(true);
-    })().finally(() => {
-      SplashScreen.hideAsync();
-    });
-  }, []);
-
-  if (!isColorSchemeLoaded) {
-    return null;
-  }
-
   return (
     <>
-      <DatabaseProvider>
-        <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-          <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
-          <GestureHandlerRootView style={{flex: 1}}>
-            <BottomSheetModalProvider>
-              <Stack >
-                <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-                <Stack.Screen options={{
-                  headerShadowVisible: false,
-                  headerBackTitleVisible: false,
-                }} name="habits/archive" />
-                <Stack.Screen options={{
-                  headerShadowVisible: false,
-                  headerBackTitleVisible: false,
-                }} name="habits/[id]" />
-              </Stack>
-            </BottomSheetModalProvider>
-          </GestureHandlerRootView>
-
-        </ThemeProvider>
-      </DatabaseProvider>
-      <PortalHost />
+      <NavigationContainer independent={true}>
+          <ThemeProvider value={LIGHT_MODE}>
+            <StatusBar />
+            <GestureHandlerRootView style={{flex: 1}}>
+              <Stack.Navigator initialRouteName="Login">
+                <Stack.Screen name="Login" component={FuelLoadSheetLoginPage} />
+                <Stack.Screen name="Search" component={FlightsTable} />
+              </Stack.Navigator>
+            </GestureHandlerRootView>
+          </ThemeProvider>
+      </NavigationContainer>
     </>
-
   );
 }
